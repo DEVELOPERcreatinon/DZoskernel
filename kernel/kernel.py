@@ -54,16 +54,27 @@ class Scheduler:
 class FileSystem:
     def __init__(self):
         self.files = {}
+        self.directories = {}
 
     def load_program(self, filename):
-        if filename in self.files:
-            return self.files[filename]
-        else:
-            print(f"File {filename} not found.")
-            return None
+        return self.files.get(filename, None)
 
     def add_file(self, filename, content):
         self.files[filename] = content
+
+    def create_directory(self, dirname):
+        if dirname not in self.directories:
+            self.directories[dirname] = []
+            print(f"Directory created: {dirname}")
+        else:
+            print(f"Directory {dirname} already exists.")
+
+    def list_files(self, dirname):
+        return self.directories.get(dirname, [])
+
+class User:
+    def __init__(self, username):
+        self.username = username
 
 class Kernel:
     def __init__(self):
@@ -72,6 +83,14 @@ class Kernel:
         self.scheduler = Scheduler()
         self.file_system = FileSystem()
         self.lock = threading.Lock()
+        self.users = {}
+
+    def create_user(self, username):
+        if username not in self.users:
+            self.users[username] = User(username)
+            print(f"User {username} created.")
+        else:
+            print(f"User {username} already exists.")
 
     def create_process(self, name):
         pid = len(self.processes) + 1
@@ -97,6 +116,16 @@ class Kernel:
                 print(f"Loaded program: {filename}")
         else:
             print(f"File {filepath} not found.")
+
+    def load_dzos_file(self, filepath):
+        if os.path.exists(filepath) and filepath.endswith('.DZos'):
+            with open(filepath, 'r') as file:
+                content = file.read()
+                filename = os.path.basename(filepath)
+                self.file_system.add_file(filename, content)
+                print(f"Loaded DZos program: {filename}")
+        else:
+            print(f"File {filepath} not found or not a DZos file.")
 
     def run(self):
         while True:
